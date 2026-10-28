@@ -1,0 +1,46 @@
+[package]
+name = "duckdb-charset"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.89"
+license = "MIT"
+description = "DuckDB loadable extension: character-encoding detection, transcode, mojibake repair & UTF-8 validity in SQL (encoding_rs + chardetng, quack-rs binding layer, no VGI, no Arrow IPC)"
+
+[lib]
+name = "charset"
+crate-type = ["cdylib"]
+
+# Packaging tool (copied from quack-rs, std-only): stamps the 534-byte DuckDB
+# extension metadata footer onto the built cdylib to produce the loadable
+# .duckdb_extension. `cargo run --bin append_metadata`.
+[[bin]]
+name = "append_metadata"
+path = "src-bin/append_metadata/main.rs"
+
+[dependencies]
+# quack-rs — pure-Rust wrapper over DuckDB's C Extension API (crates.io).
+# 0.18.0 is the version this code was written and tested against; pinned
+# exactly so the reviewed ABI-wrapper version can never float under a caret
+# requirement.
+quack-rs = "=0.18.0"
+# C extension API headers/symbols; the cdylib resolves them against the host
+# DuckDB process at LOAD time.
+libduckdb-sys = { version = "1.10504", features = ["loadable-extension"] }
+thiserror = { version = "2.0.21", default-features = false }
+# The encoding engine (src/charset.rs, ported from Query-farm/vgi-charset)
+# detects with chardetng (Firefox's heuristic detector) and decodes/encodes with
+# encoding_rs (the WHATWG Encoding Standard codec library). Both are pure-Rust.
+chardetng = "1.0.0"
+encoding_rs = "0.8.42"
+
+[dev-dependencies]
+# SQL-level integration tests: InMemoryDb compiles a real bundled DuckDB so the
+# built .duckdb_extension can be LOADed inside `cargo test`.
+quack-rs = { version = "0.18.0", features = ["bundled-test"] }
+duckdb = { version = "1.1.0", features = ["bundled"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+panic = "unwind"
