@@ -14,7 +14,7 @@ fn db() -> InMemoryDb {
 }
 
 // windows-1252 bytes for "café" (é = 0xE9 in 1252).
-const CAFE_1252: &str = "x'636166e9'";
+const CAFE_1252: &str = "from_hex('636166e9')";
 
 #[test]
 fn detect_windows_1252_cafe() {
@@ -29,7 +29,7 @@ fn detect_windows_1252_cafe() {
 fn detect_utf8() {
     let d = db();
     assert_eq!(
-        d.query_one::<String>("SELECT detect_encoding(x'48c3a96c6c6f')").unwrap(), // "Héllo"
+        d.query_one::<String>("SELECT detect_encoding(from_hex('48c3a96c6c6f'))").unwrap(), // "Héllo"
         "UTF-8"
     );
 }
@@ -37,7 +37,7 @@ fn detect_utf8() {
 #[test]
 fn detect_empty_is_null() {
     let d = db();
-    assert_eq!(d.query_one::<Option<String>>("SELECT detect_encoding(x'')").unwrap(), None);
+    assert_eq!(d.query_one::<Option<String>>("SELECT detect_encoding(from_hex(''))").unwrap(), None);
     assert_eq!(d.query_one::<Option<String>>("SELECT detect_encoding(NULL)").unwrap(), None);
 }
 
@@ -55,7 +55,7 @@ fn to_utf8_from_explicit_shift_jis() {
     let d = db();
     // "日本語" in Shift_JIS.
     assert_eq!(
-        d.query_one::<String>("SELECT to_utf8_from(x'93fa967b8cea', 'shift_jis')").unwrap(),
+        d.query_one::<String>("SELECT to_utf8_from(from_hex('93fa967b8cea'), 'shift_jis')").unwrap(),
         "日本語"
     );
 }
@@ -64,7 +64,7 @@ fn to_utf8_from_explicit_shift_jis() {
 fn to_utf8_from_unknown_label_errors() {
     let d = db();
     let err = d
-        .query_one::<String>("SELECT to_utf8_from(x'616263', 'not-a-real-encoding')")
+        .query_one::<String>("SELECT to_utf8_from(from_hex('616263'), 'not-a-real-encoding')")
         .unwrap_err();
     assert!(err.to_string().contains("not-a-real-encoding"), "{err}");
 }
@@ -87,7 +87,7 @@ fn transcode_round_trip() {
 fn is_valid_utf8_checks() {
     let d = db();
     assert!(d
-        .query_one::<bool>("SELECT is_valid_utf8(x'636166c3a9')") // "café" UTF-8
+        .query_one::<bool>("SELECT is_valid_utf8(from_hex('636166c3a9'))") // "café" UTF-8
         .unwrap());
     assert!(!d
         .query_one::<bool>(&format!("SELECT is_valid_utf8({CAFE_1252})"))
