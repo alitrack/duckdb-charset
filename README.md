@@ -9,6 +9,27 @@ Built on two battle-tested pure-Rust libraries that ship with Firefox:
 
 The engine is ported verbatim from the MIT-licensed [Query-farm `vgi-charset`](https://github.com/Query-farm/vgi-charset) VGI worker; only the Arrow IPC transport layer was replaced with direct DuckDB C-API vector I/O. No VGI, no Arrow IPC, no JSON shims.
 
+## Install
+
+Once accepted into [DuckDB's community extensions](https://github.com/duckdb/community-extensions):
+
+```sql
+INSTALL charset FROM community;
+LOAD charset;
+```
+
+Until it lands in the community registry, build from source:
+
+```bash
+git clone https://github.com/alitrack/duckdb-charset && cd duckdb-charset
+git submodule update --init --recursive
+make release          # -> build/release/charset.duckdb_extension
+```
+
+```sql
+LOAD 'path/to/charset.duckdb_extension';
+```
+
 ## Functions
 
 | Function | Signature | Returns | Notes |
