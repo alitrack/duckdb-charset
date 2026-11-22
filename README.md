@@ -51,12 +51,14 @@ LOAD 'path/to/charset.duckdb_extension';
 ## Examples
 
 ```sql
+LOAD 'charset.duckdb_extension';
+
 -- Guess the encoding of a blob of windows-1252 "café" bytes and read it back
-SELECT detect_encoding(x'636166e9')   AS detected;  -- windows-1252
-SELECT to_utf8(x'636166e9')           AS text;      -- café
+SELECT detect_encoding(from_hex('636166e9')) AS detected;  -- windows-1252
+SELECT to_utf8(from_hex('636166e9'))         AS text;      -- café
 
 -- Explicit-label decode (e.g. a Shift_JIS byte stream)
-SELECT to_utf8_from(x'93fa967b8cea', 'shift_jis')   AS text;  -- 日本語
+SELECT to_utf8_from(from_hex('93fa967b8cea'), 'shift_jis') AS text;  -- 日本語
 
 -- Encode for export (café -> windows-1252 bytes, round-trips losslessly)
 SELECT transcode('café', 'windows-1252')::VARCHAR   AS bytes; -- caf\xe9
@@ -67,7 +69,7 @@ SELECT fix_mojibake('CafÃ©')   AS fixed;  -- Café
 SELECT fix_mojibake('Café')    AS noop;   -- Café (unchanged)
 
 -- Validate and enumerate
-SELECT is_valid_utf8(x'636166e9');               -- false (0xE9 alone is not UTF-8)
+SELECT is_valid_utf8(from_hex('636166e9'));      -- false (0xE9 alone is not UTF-8)
 SELECT count(*) FROM supported_encodings();      -- 40
 ```
 
